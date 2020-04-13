@@ -95,6 +95,7 @@ if __name__ == "__main__":
     # English: Wikipedia
     with open("data/wiki_article_list.txt", "r") as f:
         for line in f.readlines():
+            # Bug: This will delete the last char of last line
             article_name = line[:-1]
             file_name = article_name
             if file_name.find(":") != -1:

@@ -70,6 +70,10 @@ def get_html(URL: str, verbose: bool = True) -> str:
     return content
 
 def save_html(URL: str, file_name: str, category: str, use_system: bool = True):
+    ''' Download the document at <URL> as <file_name> into folder <category>
+
+    :param use_system: Whether the request is handled by the system module urllib
+    '''
     try:
         content = ""
         if use_system == True:

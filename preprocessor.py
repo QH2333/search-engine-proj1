@@ -13,12 +13,12 @@ def read_en_stopwords() -> list:
 
 def en_preprocess(file_path: str, stop_words: list):
     with open(file_path, "r", encoding="UTF-8") as f:
-        html_content = "".join(f.readlines())
+        html_content = f.read()
         parsed_content = BeautifulSoup(html_content, 'html.parser')
         text_content = ""
         # Extract pure-text content from the original html file
         for child in parsed_content.find(id="mw-content-text").div.children:
-            if child.name in ("p", "h2", "h3"):
+            if child.name in ("p", "h2", "h3", "h4", "h5"):
                 text_content += child.get_text()
         # To lower case
         text_content = text_content.lower()

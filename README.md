@@ -50,6 +50,7 @@ Host: www.baidu.com
 
 预处理模块对英文文档进行了如下操作：
 
+- 提取正文内容
 - 将各个单词进行字符化，完成删除特殊字符、大小写转换等操作
 - 删除英文停用词（Stop Word）
 - 调用或者编程实现英文Porter Stemming功能
@@ -57,11 +58,44 @@ Host: www.baidu.com
 
 对中文文档进行了如下操作：
 
+- 提取正文内容
 - 调研并选择合适的中文分词技术和工具实现中文分词
 - 删除中文停用词
 - 将中文文档进行字符化，即可被搜索引擎索引的字符单元
 - 经过以上处理之后，将经过处理之后所形成简化文档保存（如：News_1_C.txt），以备以后的索引处理
 
+这部分的代码实现位于`preprocessor.py`文件中
+
 #### 对英文文档的处理
+
+对于每一个HTML文档，我们首先将其所有内容读入程序，这里使用Python的with语法结构，可以保证文件的正确关闭：
+
+```Python
+with open(file_path, "r", encoding="UTF-8") as f:
+    html_content = f.read()
+    ...
+```
+
+##### 提取正文内容
+
+网页的源代码中存在大量HTML标签、CSS代码、JavaScript代码和标注信息，这些内容都会干扰搜索引擎的索引，所以要在预处理过程中去除。去除后，这里只保留文章正文的内容。由于不同站点页面的格式不同，提取正文的程序需要针对特定站点编写。
+
+提取网页正文的第一步是解析网页的HTML源文件，这一工作通过`Beautiful Soup`模块实现。`Beautiful Soup`是一个功能强大的模块，主要功能是从网页抓取数据，它提供了一些简单的函数来解析HTML文档，并为用户提供需要抓取的数据。这里首先利用之前读取的文档内容构造一个`BeautifulSoup`类的实例，以备后续处理。
+
+```Python
+    parsed_content = BeautifulSoup(html_content, 'html.parser')
+```
+
+通过查阅浏览器的开发者模式发现，一篇维基百科文档的正文部分都位于一个`id`属性为`mw-content-text`的`div`标签内部，正文段落和标题分别用`p`和`h2`等标签包裹。这里直接用`Beautiful Soup`提供的`find()`函数找到正文所在的`div`标签，遍历其内部所有标签，一旦发现正文段落或标题就将其内容追加到`text_content`后。经过验证，这样可以准确地提取正文内容。
+
+```Python
+    text_content = ""
+    # Extract pure-text content from the original html file
+    for child in parsed_content.find(id="mw-content-text").div.children:
+        if child.name in ("p", "h2", "h3", "h4", "h5"):
+            text_content += child.get_text()
+```
+
+##### 字符化、删除特殊字符、大小写转换
 
 #### 对中文文档的处理

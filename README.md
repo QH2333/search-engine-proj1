@@ -68,6 +68,13 @@ Host: www.baidu.com
 
 #### 对英文文档的处理
 
+这里使用了一个函数`en_preprocess()`来打包整个对英文文档的处理过程，函数接收一个字符串类型的原始文档路径参数和预先读取的停用词列表（后续介绍），然后以字符串形式返回处理结果。
+
+```Python
+def en_preprocess(file_path: str, stop_words) -> str:
+    ...
+```
+
 对于每一个HTML文档，我们首先将其所有内容读入程序，这里使用Python的with语法结构，可以保证文件的正确关闭：
 
 ```Python
@@ -76,7 +83,7 @@ with open(file_path, "r", encoding="UTF-8") as f:
     ...
 ```
 
-##### 提取正文内容
+##### 提取英文正文内容
 
 网页的源代码中存在大量HTML标签、CSS代码、JavaScript代码和标注信息，这些内容都会干扰搜索引擎的索引，所以要在预处理过程中去除。去除后，这里只保留文章正文的内容。由于不同站点页面的格式不同，提取正文的程序需要针对特定站点编写。
 
@@ -124,7 +131,7 @@ with open(file_path, "r", encoding="UTF-8") as f:
     token_list = text_content.split(" ")
 ```
 
-##### 移除停用词
+##### 移除英文停用词
 
 移除停用词之前，首先要读入停用词清单，将其放置在列表中以备使用。这里定义了一个函数来处理这项工作。
 
@@ -157,9 +164,87 @@ def read_en_stopwords() -> list:
     new_list = []
     for i in range(len(token_list)):
         new_list.append(p.stem(token_list[i], 0, len(token_list[i]) - 1))
-    final_result = " ".join(new_list)
+    token_list = new_list
 ```
 
-至此，英文文档的处理工作已经完成，只需要将结果保存成文本文件即可。
+这时候`token_list`中保存的就是列表形式的最终结果，为了方便后续将其保存为文本文件，我们使用`join()`函数将其转换成字符串，然后返回。
+
+```Python
+    final_result = " ".join(token_list)
+    return final_result
+```
+
+至此，英文文档的处理工作已经完成，只需要将结果保存为文件即可。
 
 #### 对中文文档的处理
+
+中文文档的处理函数框架与英文文档处理函数相同，首先定义一个函数来打包整个处理过程，然后在其中打开原始HTML文档并读取所有内容。
+
+```Python
+def zh_preprocess(file_path: str, stop_words) -> str:
+    with open(file_path, "r", encoding="UTF-8") as f:
+        html_content = f.read()
+        ...
+```
+
+##### 提取中文正文内容
+
+对中文文档正文的提取同样使用`Beautiful Soup`模块。一篇IT之家文章的标题位于文档中唯一的`h1`标签内部，正文部分位于`id`属性为`paragraph`的`div`标签内部，正文的每一个段落都用`p`标签包裹。与英文文档正文的提取相同，这里使用`find()`函数找到正文所在的`div`标签，遍历其内部所有标签，将所有正文段落的内容追加到`text_content`后。
+
+```Python
+    parsed_content = BeautifulSoup(html_content, 'html.parser')
+    text_content = ""
+    # Extract pure-text content from the original html file
+    text_content += "《" + parsed_content.findAll("h1")[0].string + "》"
+    for child in parsed_content.find(id="paragraph").children:
+        if child.name in ("p"):
+            text_content += child.get_text()
+```
+
+##### 对中文分词技术的调研
+
+##### 实现中文分词
+
+经过上一节的对比分析，这里决定使用hanlp这一中文分词器，在Python中使用这一分词器只需要安装并导入`hanlp`模块即可。使用hanlp的第一步是加载预训练模型，根据官方示例，这里加载一个名为`PKU_NAME_MERGED_SIX_MONTHS_CONVSEG`的分词模型。下面的两行代码位于代码文件的开头部分、所有函数外部。
+
+```Python
+import hanlp
+zh_tokenizer = hanlp.load('PKU_NAME_MERGED_SIX_MONTHS_CONVSEG')
+```
+
+模型加载完成后返回一个函数对象，将其保存在变量`zh_tokenizer`中，然后就可以像正常函数那样调用这个函数变量。回到中文文档处理函数中，只需要向`zh_tokenizer`传入正文字符串即可一步完成分词，返回值是一个单词列表，将其保存在变量`token_list`中。
+
+```Python
+    # Tokenize
+    token_list = zh_tokenizer(text_content)
+```
+
+##### 移除中文停用词
+
+移除中文停用词的步骤与移除英文停用词的步骤基本相同，首先调用以下函数读取中文停用词列表并将这一列表保存在`stop_words`变量中。
+
+```Python
+def read_zh_stopwords() -> list:
+    ret = []
+    with open("materials/zh_stop_words.txt", "r") as f:
+        ret = f.read().split("\n")
+    return ret
+```
+
+遍历单词列表`token_list`，删除所有出现在停用词表中的单词就完成了“移除中文停用词”这一步骤。
+
+```Python
+    # Remove stop words
+    new_list = []
+    for token in token_list:
+        if token not in stop_words and token != "":
+            new_list.append(token)
+    token_list = new_list
+```
+
+最后将保存最终结果的列表转换为字符串，并返回。
+
+```Python
+    final_result = " ".join(token_list)
+    return final_result
+```

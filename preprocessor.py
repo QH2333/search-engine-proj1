@@ -11,7 +11,8 @@ def read_en_stopwords() -> list:
         ret = f.read().split("\n")
     return ret
 
-def en_preprocess(file_path: str, stop_words: list):
+def en_preprocess(file_path: str):
+    stop_words = read_en_stopwords()
     with open(file_path, "r", encoding="UTF-8") as f:
         html_content = f.read()
         parsed_content = BeautifulSoup(html_content, 'html.parser')
@@ -52,7 +53,8 @@ def read_zh_stopwords() -> list:
         ret = f.read().split("\n")
     return ret
 
-def zh_preprocess(file_path: str, stop_words: list):
+def zh_preprocess(file_path: str):
+    stop_words = read_zh_stopwords()
     with open(file_path, "r", encoding="UTF-8") as f:
         html_content = f.read()
         parsed_content = BeautifulSoup(html_content, 'html.parser')
@@ -74,32 +76,26 @@ def zh_preprocess(file_path: str, stop_words: list):
         return final_result
 
 if __name__ == "__main__":
-    # en_stop_words = read_en_stopwords()
     # path = "original_data/en_wiki/"
     # file_list = os.listdir(path) #列出文件夹下所有的目录与文件
     # for file_name in file_list:
     #     file_path = path + file_name
     #     if os.path.isfile(file_path):
     #         print("Processing " + file_path)
-    #         result = en_preprocess(file_path, en_stop_words)
+    #         result = en_preprocess(file_path)
     #         target_path = "processed_data/en_wiki/" + file_name
     #         print("Writing result to " + target_path)
     #         with open(target_path, "w", encoding="UTF-8") as f:
     #             f.write(result)
 
-    zh_stop_words = read_zh_stopwords()
     path = "original_data/zh_ithome/"
     file_list = os.listdir(path) #列出文件夹下所有的目录与文件
     for file_name in file_list:
         file_path = path + file_name
         if os.path.isfile(file_path):
             print("Processing " + file_path)
-            result = zh_preprocess(file_path, zh_stop_words)
+            result = zh_preprocess(file_path)
             target_path = "processed_data/zh_ithome/" + file_name[:10] + ".txt"
             print("Writing result to " + target_path)
             with open(target_path, "w", encoding="UTF-8") as f:
                 f.write(result)
-
-    # target_path = "original_data/zh_ithome/" + "zh_480_999_org.txt"
-    # print(zh_stop_words)
-    # print(zh_preprocess(target_path, zh_stop_words))

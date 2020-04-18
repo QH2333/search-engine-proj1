@@ -9,7 +9,7 @@
 - bs4
 - hanlp
 
-另外还引用了位于[这里](https://tartarus.org/martin/PorterStemmer/python.txt)的Porter Stemmer算法Python实现。
+另外还引用了位于[这里](https://tartarus.org/martin/PorterStemmer/python.txt)的Porter Stemming算法Python实现。
 
 ## 实现过程
 
@@ -86,7 +86,7 @@ with open(file_path, "r", encoding="UTF-8") as f:
     parsed_content = BeautifulSoup(html_content, 'html.parser')
 ```
 
-通过查阅浏览器的开发者模式发现，一篇维基百科文档的正文部分都位于一个`id`属性为`mw-content-text`的`div`标签内部，正文段落和标题分别用`p`和`h2`等标签包裹。这里直接用`Beautiful Soup`提供的`find()`函数找到正文所在的`div`标签，遍历其内部所有标签，一旦发现正文段落或标题就将其内容追加到`text_content`后。经过验证，这样可以准确地提取正文内容。
+通过查阅浏览器的开发者模式发现，一篇维基百科文档的正文部分位于`id`属性为`mw-content-text`的`div`标签内部，正文段落和标题分别用`p`和`h2`等标签包裹。这里直接用`Beautiful Soup`提供的`find()`函数找到正文所在的`div`标签，遍历其内部所有标签，一旦发现正文段落或标题就将其内容追加到`text_content`后。经过验证，这样可以准确地提取正文内容。
 
 ```Python
     text_content = ""
@@ -96,6 +96,70 @@ with open(file_path, "r", encoding="UTF-8") as f:
             text_content += child.get_text()
 ```
 
-##### 字符化、删除特殊字符、大小写转换
+##### 大小写转换、删除特殊字符、字符化
+
+首先进行进行大小写转换的工作。由于上一步已经将网页正文内容解析为字符串格式，这一步直接调用Python内置字符串函数`lower()`即可。
+
+```Python
+    # To lower case
+    text_content = text_content.lower()
+```
+
+第二步删除特殊字符，这里将正文字符串中所有不属于小写英文字母（由于已经经过大小写转换，不可能出现大写字符）和数字的字符都作为特殊字符，用空格代替。此时为了避免多个连续空格影响后续Tokenize步骤，使用了正则表达式匹配所有连续的多个空格，将其全都替换为一个空格。
+
+```Python
+    # Replace special characters
+    for i in range(len(text_content)):
+        curr_char = text_content[i]
+        if not ((curr_char >= 'a' and curr_char <= 'z') or (curr_char >= '0' and curr_char <= '9')):
+            text_content = text_content.replace(curr_char, " ")
+    # Remove duplicated spaces
+    text_content = re.sub("[ ]+", " ", text_content)
+```
+
+去除所有特殊字符后，Tokenize步骤只需要直接调用Python内置字符串处理函数`split()`即可。该函数接收一个字符串参数作为分隔符，然后对指定字符串进行切片，以字符串列表的形式返回切片的结果。经过之前的预处理步骤处理后的正文字符串只包含用空格分隔的英文单词，所以用空格为参数调用`split()`函数，就可以得到Tokenize的结果。
+
+```Python
+    # Tokenize
+    token_list = text_content.split(" ")
+```
+
+##### 移除停用词
+
+移除停用词之前，首先要读入停用词清单，将其放置在列表中以备使用。这里定义了一个函数来处理这项工作。
+
+```Python
+def read_en_stopwords() -> list:
+    ret = []
+    with open("materials/en_stop_words.txt", "r") as f:
+        ret = f.read().split("\n")
+    return ret
+```
+
+调用以上函数并将停用词列表保存在`stop_words`变量中，然后就可以进行停用词移除处理。首先遍历`token_list`中的每一个单词，然后逐一判断单词是否属于停用词，如果不属于停用词就把这个单词放到临时列表`new_list`中。当所有单词都处理完毕时，`new_list`中保存的就是移除了停用词的正文单词列表，只需要将其赋值给`token_list`即可。
+
+```Python
+    # Remove stop words
+    new_list = []
+    for token in token_list:
+        if token not in stop_words and token != "":
+            new_list.append(token)
+    token_list = new_list
+```
+
+##### Porter Stemming
+
+这里调用官方的Python版Porter Stemmer来实现提取词干，出处在[这里](https://tartarus.org/martin/PorterStemmer/python.txt)。使用上，需要先创建一个`PorterStemmer`类的实例`p`，然后在`p`上调用函数`stem()`，传入字符串类型的单词、整数类型的单词起止下标，函数就会返回词干提取的结果。这一部分的代码的框架与“移除停用词”部分基本类似，遍历处理`token_list`，然后将结果放入临时列表`new_list`，最后把临时列表赋值给`token_list`。
+
+```Python
+    # Porter stemming
+    p = PorterStemmer()
+    new_list = []
+    for i in range(len(token_list)):
+        new_list.append(p.stem(token_list[i], 0, len(token_list[i]) - 1))
+    final_result = " ".join(new_list)
+```
+
+至此，英文文档的处理工作已经完成，只需要将结果保存成文本文件即可。
 
 #### 对中文文档的处理

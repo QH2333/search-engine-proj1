@@ -44,7 +44,21 @@ Host: www.baidu.com
 
 #### 爬取网页并保存
 
-实现了网页下载功能后，爬虫就比较简单了。对目标站点的URL格式进行研究可以发现，IT之家的文章URL格式可以用`https://www.ithome.com/0/<i>/<j>.htm`描述，其中`j`的取值范围是`100-999`，溢出后向`i`进一，2020年4月15日`i`已经增长至`482`。这里编写程序读取`481-482`这一范围内的`i`对应的文章，共爬取到`1216`篇有效文档。维基百科的文章URL格式可以用`https://en.wikipedia.org/wiki/<article_name>`描述，由于文章名称没有规律，所以需要预先获取一份文章名称列表。这里使用了维基百科用户West.andrew.g提供的一份最流行的5000个维基百科页面的[列表](https://en.wikipedia.org/wiki/User:West.andrew.g/Popular_pages)，使用`JavaScrip`简单处理以后将其保存为txt文件以供程序自动爬取，共下载了`602`篇有效文档。
+实现了网页下载功能后，爬虫就比较简单了。对目标站点的URL格式进行研究可以发现，IT之家的文章URL格式可以用`https://www.ithome.com/0/<i>/<j>.htm`描述，其中`j`的取值范围是`100-999`，溢出后向`i`进一，2020年4月15日`i`已经增长至`482`。这里编写程序读取`481-482`这一范围内的`i`对应的文章，共爬取到`1216`篇有效文档。
+
+维基百科的文章URL格式可以用`https://en.wikipedia.org/wiki/<article_name>`描述，由于文章名称没有规律，所以需要预先获取一份文章名称列表。这里使用了维基百科用户West.andrew.g提供的一份最流行的5000个维基百科页面的[列表](https://en.wikipedia.org/wiki/User:West.andrew.g/Popular_pages)，使用`JavaScrip`简单处理以后将其保存为txt文件以供程序自动爬取：
+
+```JavaScript
+var lines = document.getElementById("interest").getElementsByTagName("tbody")[0].getElementsByTagName("tr");
+var text = "";
+for (elem of lines) {
+    text = text.concat(elem.getElementsByTagName("td")[1].getElementsByTagName("a")[0].getAttribute("href"));
+    text = text.concat(",");
+}
+console.log(text);
+```
+
+这里共下载了`1081`篇有效的维基百科文档。
 
 ### 预处理
 

@@ -7,6 +7,7 @@ import urllib.parse
 import re
 
 def get_response_body(sock, host: str, path: str, verbose: bool = True) -> str:
+    # Make an HTTP request
     request = "GET %s HTTP/1.1\r\n" % (path)
     request += "Host: %s\r\n" % (host)
     request += "\r\n"
@@ -74,6 +75,10 @@ def save_html(URL: str, file_name: str, category: str, use_system: bool = True):
 
     :param use_system: Whether the request is handled by the system module urllib
     '''
+    file_path = "original_data/%s/%s" % (category, file_name)
+    if os.path.exists(file_path) and os.path.isfile(file_path):
+        print("Found " + file_path)
+        return
     try:
         content = ""
         if use_system == True:
@@ -83,7 +88,7 @@ def save_html(URL: str, file_name: str, category: str, use_system: bool = True):
             content = resp.read().decode("UTF-8")
         else:
             content = get_html(URL, verbose=False) # Support HTTP1.1
-        with open("original_data/%s/%s" % (category, file_name), "w", encoding="UTF-8") as f:
+        with open(file_path, "w", encoding="UTF-8") as f:
             f.write(content)
         print("Successfully saved " + URL)
     except Exception as e:
@@ -97,7 +102,7 @@ if __name__ == "__main__":
     #         time.sleep(1)
 
     # English: Wikipedia
-    with open("data/wiki_article_list.txt", "r") as f:
+    with open("original_data/wiki_article_list.txt", "r") as f:
         for line in f.readlines():
             # Bug: This will delete the last char of last line
             article_name = line[:-1]

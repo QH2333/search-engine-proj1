@@ -1,1 +1,0 @@
-谷歌   Android   Studio   4.0   Beta   4   发布 Android   Studio   4.0   Beta   4   发布 主要 更新 内容 如下 禁用   Build   AnalyzerGeneral   fixesAndroid   Gradle   PluginBuild   VariantsDexer   ( D8 ) Import/Sync 更 内容 见 更新 说明 Android   Studio   基于   IntelliJ   IDEA   官方   Android   应用 开发 集成 开发 环境   ( IDE )   IntelliJ   强大 代码 编辑器 开发者 工具 Android   Studio   提供 更 提高   Android   应用 构建 效率 功能

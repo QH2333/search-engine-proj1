@@ -1,1 +1,0 @@
-UNIX   操作系统   NetBSD  8.2   发布 NetBSD  8.2   现已 发布 NetBSD   一个 免费 安全 高度 移植 开源   UNIX   操作系统 适合 很 多种 平台   64   位   AlphaServers   桌面 系统 手持 嵌入式 系统 设计 上 非常 整洁 拥有 先进 特性 业界 学术界 都 有口皆碑 用户 完整 源代码 获得 支持 很多 应用 程序 都 容易   NetBSD   Packages   Collection   获得 版本 包括   NetBSD - 8   中 所有 安全 修补 程序 稳定性 至关重要 修补 程序 一些 重点 更新 内容 如下

@@ -11,7 +11,13 @@ def read_en_stopwords() -> list:
         ret = f.read().split("\n")
     return ret
 
-def en_preprocess(file_path: str, stop_words) -> str:
+def en_preprocess(file_path: str, stop_words: list, step: int = 4) -> str:
+    '''
+    Step1: Extract pure-text content from the original html file
+    Step2: To lower case, remove special characters
+    Step3: Remove stop words
+    Step4: Porter stemming (Final result)
+    '''
     with open(file_path, "r", encoding="UTF-8") as f:
         html_content = f.read()
         parsed_content = BeautifulSoup(html_content, 'html.parser')
@@ -20,6 +26,8 @@ def en_preprocess(file_path: str, stop_words) -> str:
         for child in parsed_content.find(id="mw-content-text").div.children:
             if child.name in ("p", "h2", "h3", "h4", "h5"):
                 text_content += child.get_text()
+        if step == 1:
+            return text_content
         # To lower case
         text_content = text_content.lower()
         # Remove special characters
@@ -27,10 +35,12 @@ def en_preprocess(file_path: str, stop_words) -> str:
         text_content = text_content.replace("-", "")
         for i in range(len(text_content)):
             curr_char = text_content[i]
-            if not ((curr_char >= 'a' and curr_char <= 'z')): # or (curr_char >= '0' and curr_char <= '9')):
+            if not ((curr_char >= 'a' and curr_char <= 'z')):
                 text_content = text_content.replace(curr_char, " ")
         # Remove duplicated spaces
         text_content = re.sub("[ ]+", " ", text_content)
+        if step == 2:
+            return text_content
         # Tokenize
         token_list = text_content.split(" ")
         # Remove stop words
@@ -39,6 +49,8 @@ def en_preprocess(file_path: str, stop_words) -> str:
             if token not in stop_words and token != "":
                 new_list.append(token)
         token_list = new_list
+        if step == 3:
+            return text_content
         # Porter stemming
         p = PorterStemmer()
         new_list = []
@@ -54,7 +66,12 @@ def read_zh_stopwords() -> list:
         ret = f.read().split("\n")
     return ret
 
-def zh_preprocess(file_path: str, stop_words: list, step: int = 2) -> str:
+def zh_preprocess(file_path: str, stop_words: list, step: int = 3) -> str:
+    '''
+    Step1: Extract pure-text content from the original html file
+    Step2: Tokenize
+    Step3: Remove stop words and special characters (Final result)
+    '''
     with open(file_path, "r", encoding="UTF-8") as f:
         html_content = f.read()
         parsed_content = BeautifulSoup(html_content, 'html.parser')
@@ -66,43 +83,44 @@ def zh_preprocess(file_path: str, stop_words: list, step: int = 2) -> str:
                 text_content += child.get_text()
         if step == 1:
             return text_content
-        # Remove special characters
-        text_content = re.sub("[^\u4e00-\u9fa5]", " ", text_content)
         # Tokenize
         token_list = zh_tokenizer(text_content)
-        # Remove stop words
+        if step == 2:
+            return " ".join(token_list)
+        # Remove stop words and special characters
         new_list = []
         for token in token_list:
-            if token not in stop_words and token != "":
+            if token not in stop_words and token != "" and re.match("[^\u4e00-\u9fa5]", token) == None:
                 new_list.append(token)
         token_list = new_list
         final_result = " ".join(token_list)
-        final_result = re.sub("[ ]+", " ", final_result)
         return final_result
 
 if __name__ == "__main__":
-    # path = "original_data/en_wiki/"
-    # stop_words = read_en_stopwords()
-    # file_list = os.listdir(path) #列出文件夹下所有的目录与文件
-    # for file_name in file_list:
-    #     file_path = path + file_name
-    #     if os.path.isfile(file_path):
-    #         print("Processing " + file_path)
-    #         result = en_preprocess(file_path, stop_words)
-    #         target_path = "processed_data/en_wiki/" + file_name
-    #         print("Writing result to " + target_path)
-    #         with open(target_path, "w", encoding="UTF-8") as f:
-    #             f.write(result)
-
-    path = "original_data/zh_ithome/"
-    stop_words = read_zh_stopwords()
-    file_list = os.listdir(path) #列出文件夹下所有的目录与文件
-    for file_name in file_list:
-        file_path = path + file_name
-        if os.path.isfile(file_path):
-            print("Processing " + file_path)
-            result = zh_preprocess(file_path, stop_words, 1)
-            target_path = "processed_data/main_body/zh_ithome/" + file_name[:10] + ".txt"
-            print("Writing result to " + target_path)
-            with open(target_path, "w", encoding="UTF-8") as f:
-                f.write(result)
+    fun = 2
+    if fun == 1:
+        path = "original_data/en_wiki/"
+        stop_words = read_en_stopwords()
+        file_list = os.listdir(path) #列出文件夹下所有的目录与文件
+        for file_name in file_list:
+            file_path = path + file_name
+            if os.path.isfile(file_path):
+                print("Processing " + file_path)
+                result = en_preprocess(file_path, stop_words, 3)
+                target_path = "processed_data/en_wiki_3/" + file_name
+                print("Writing result to " + target_path)
+                with open(target_path, "w", encoding="UTF-8") as f:
+                    f.write(result)
+    else:
+        path = "original_data/zh_ithome/"
+        stop_words = read_zh_stopwords()
+        file_list = os.listdir(path) #列出文件夹下所有的目录与文件
+        for file_name in file_list:
+            file_path = path + file_name
+            if os.path.isfile(file_path):
+                print("Processing " + file_path)
+                result = zh_preprocess(file_path, stop_words, 3)
+                target_path = "processed_data/zh_ithome_final/" + file_name[:10] + ".txt"
+                print("Writing result to " + target_path)
+                with open(target_path, "w", encoding="UTF-8") as f:
+                    f.write(result)

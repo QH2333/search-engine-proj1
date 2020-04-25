@@ -95,18 +95,17 @@ def save_html(URL: str, file_name: str, category: str, use_system: bool = True):
         print("Failed to request " + URL)
 
 if __name__ == "__main__":
-    # # Chinese: IT之家 
-    # for i in range(481, 482):
-    #     for j in range(100, 1000):
-    #         save_html("https://www.ithome.com/0/%d/%d.htm" % (i, j), "zh_%d_%d_org.txt" % (i, j), "zh_ithome")
-    #         time.sleep(1)
+    # Chinese: IT Home 
+    for i in range(481, 482):
+        for j in range(100, 1000):
+            save_html("https://www.ithome.com/0/%d/%d.htm" % (i, j), "zh_%d_%d_org.txt" % (i, j), "zh_ithome", False)
+            time.sleep(1) # Avoid overloading the server
 
     # English: Wikipedia
     with open("original_data/wiki_article_list.txt", "r") as f:
         for line in f.readlines():
-            # Bug: This will delete the last char of last line
             article_name = line[:-1]
             file_name = article_name
             if file_name.find(":") != -1:
                 file_name = file_name.replace(":", "_", -1)
-            save_html("https://en.wikipedia.org/wiki/" + article_name, file_name + ".txt", "en_wiki")
+            save_html("https://en.wikipedia.org/wiki/" + article_name, file_name + ".txt", "en_wiki", True)

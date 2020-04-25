@@ -272,22 +272,38 @@ def zh_preprocess(file_path: str, stop_words: list, step: int = 3) -> str:
 
 经过调研得知，常用中文分词框架包括jieba、HanLP、pkuseg、THULAC、NLPIR等。其中，jieba、HanLP是开源框架，pkuseg、THULAC、NLPIR分别是北京大学、清华大学、中科院计算所提供的NLP处理框架。
 
-从使用便捷程度上说，四个库都支持Python，并且都可以通过pip快速下载使用，没有太大区别。从社区角度上说，jieba、HanLP两个框架较为活跃，pkuseg活跃度一般，而THULAC框架从2018年以后没有更新。从准确度上讲，。其他特点上，根据HanLP官方的说明，其训练的语料比较多，载入了很多实体库，在实体边界的识别上有一定的优势，可以更好地识别一些专有名词。
+从使用便捷程度上说，五个库都支持Python，并且都可以通过pip快速下载使用，没有太大区别。从社区角度上说，jieba、HanLP两个框架较为活跃，pkuseg活跃度一般，而THULAC框架从2018年以后没有更新。从准确度上说，根据pkuseg对jieba、pkuseg、THULAC三个框架进行的测试，pkuseg准确度最高，THULAC其次，jieba最低，但由于本项目的目的并非语言分析，故影响不大。从分词效率上说，我在五个框架对同一篇[长文](https://www.ithome.com/0/481/599.htm)进行了10次分词，然后对执行时间取平均数，得到的执行时长显示HanLP效率最低，pkuseg、THULAC、NLPIR速度中等且差距不大，jieba分词效率最高。
+
+```text
+__HanLP__
+Avg: 3.656295
+__jieba__
+Avg: 0.000000
+__pkuseg__
+Avg: 0.472756
+__pynlpir__
+Avg: 0.383886
+__thulac__
+Avg: 0.596192
+```
+
+一些框架还有更多特点。根据HanLP官方的说明，其训练的语料比较多，载入了很多实体库，在实体边界的识别上有一定的优势，可以更好地识别一些专有名词。jieba分词支持精确模式、全模式、搜索引擎模式、paddle模式四大模式。精确模式与其他分词框架默认方法的定位相同，而搜索引擎模式在精确模式的基础上，对长词再次切分，得到多粒度的分词结果，从而提高召回率，适合用于搜索引擎分词。
+
+经过速度和功能上的对比，这里决定使用速度快，支持搜索引擎多粒度分词的jieba框架实现分词。
 
 ##### 实现中文分词
 
-经过上一节的对比分析，这里决定使用hanlp这一中文分词器，在Python中使用这一分词器只需要安装并导入`hanlp`模块即可。使用hanlp的第一步是加载预训练模型，根据官方示例，这里加载一个名为`PKU_NAME_MERGED_SIX_MONTHS_CONVSEG`的分词模型。下面的两行代码位于代码文件的开头部分、所有函数外部。
+经过上一节的对比分析，这里决定使用jieba这一中文分词器，在Python中使用这一分词器只需要安装并导入`jieba`模块即可。。
 
 ```Python
-import hanlp
-zh_tokenizer = hanlp.load('PKU_NAME_MERGED_SIX_MONTHS_CONVSEG')
+import jieba
 ```
 
-模型加载完成后返回一个函数对象，将其保存在变量`zh_tokenizer`中，然后就可以像正常函数那样调用这个函数变量。回到中文文档处理函数中，只需要向`zh_tokenizer`传入正文字符串即可一步完成分词，返回值是一个单词列表，将其保存在变量`token_list`中。
+导入模块后使用`cut_for_search()`函数进行多粒度中文分词。回到中文文档处理函数中，只需要向`cut_for_search()`传入正文字符串即可一步完成分词，返回值是一个单词列表，将其保存在变量`token_list`中。
 
 ```Python
     # Tokenize
-    token_list = zh_tokenizer(text_content)
+    token_list = jieba.cut_for_search(text_content)
 ```
 
 ##### 移除中文停用词和特殊字符

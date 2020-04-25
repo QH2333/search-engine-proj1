@@ -2,8 +2,9 @@ import os
 import re
 from bs4 import BeautifulSoup
 from PorterStemmer import PorterStemmer
-import hanlp
-zh_tokenizer = hanlp.load('PKU_NAME_MERGED_SIX_MONTHS_CONVSEG')
+import jieba
+# import hanlp
+# zh_tokenizer = hanlp.load('PKU_NAME_MERGED_SIX_MONTHS_CONVSEG')
 
 def read_en_stopwords() -> list:
     ret = []
@@ -84,7 +85,7 @@ def zh_preprocess(file_path: str, stop_words: list, step: int = 3) -> str:
         if step == 1:
             return text_content
         # Tokenize
-        token_list = zh_tokenizer(text_content)
+        token_list = jieba.cut_for_search(text_content)
         if step == 2:
             return " ".join(token_list)
         # Remove stop words and special characters

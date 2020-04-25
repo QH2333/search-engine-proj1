@@ -38,6 +38,8 @@ def get_response_body(sock, host: str, path: str, verbose: bool = True) -> str:
     if not find_length:
         raise Exception("Unknown content length")
     content_length = int(find_length.group()[16:])
+    if content_length < 128:
+        raise Exception("Invalid content length")
     while content_length > len(content):
         data = sock.recv(min(1024, content_length - len(content)))
         content += data
@@ -70,7 +72,7 @@ def get_html(URL: str, verbose: bool = True) -> str:
     
     return content
 
-def save_html(URL: str, file_name: str, category: str, use_system: bool = True):
+def save_html(URL: str, file_name: str, category: str, use_system: bool = True) -> bool:
     ''' Download the document at <URL> as <file_name> into folder <category>
 
     :param use_system: Whether the request is handled by the system module urllib
@@ -78,7 +80,7 @@ def save_html(URL: str, file_name: str, category: str, use_system: bool = True):
     file_path = "original_data/%s/%s" % (category, file_name)
     if os.path.exists(file_path) and os.path.isfile(file_path):
         print("Found " + file_path)
-        return
+        return True
     try:
         content = ""
         if use_system == True:
@@ -91,21 +93,23 @@ def save_html(URL: str, file_name: str, category: str, use_system: bool = True):
         with open(file_path, "w", encoding="UTF-8") as f:
             f.write(content)
         print("Successfully saved " + URL)
+        return True
     except Exception as e:
         print("Failed to request " + URL)
+        return False
 
 if __name__ == "__main__":
-    # Chinese: IT Home 
-    for i in range(481, 482):
+    # Chinese: IT Home
+    for i in range(483, 484):
         for j in range(100, 1000):
             save_html("https://www.ithome.com/0/%d/%d.htm" % (i, j), "zh_%d_%d_org.txt" % (i, j), "zh_ithome", False)
-            time.sleep(1) # Avoid overloading the server
+            time.sleep(0.2) # Avoid overloading the server
 
-    # English: Wikipedia
-    with open("original_data/wiki_article_list.txt", "r") as f:
-        for line in f.readlines():
-            article_name = line[:-1]
-            file_name = article_name
-            if file_name.find(":") != -1:
-                file_name = file_name.replace(":", "_", -1)
-            save_html("https://en.wikipedia.org/wiki/" + article_name, file_name + ".txt", "en_wiki", True)
+    # # English: Wikipedia
+    # with open("original_data/wiki_article_list.txt", "r") as f:
+    #     for line in f.readlines():
+    #         article_name = line[:-1]
+    #         file_name = article_name
+    #         if file_name.find(":") != -1:
+    #             file_name = file_name.replace(":", "_", -1)
+    #         save_html("https://en.wikipedia.org/wiki/" + article_name, file_name + ".txt", "en_wiki", True)
